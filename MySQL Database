@@ -1,0 +1,47 @@
+import mysql.connector
+
+# Create a connection to the MySQL database
+connection = mysql.connector.connect(
+    host="localhost",
+    user="your_username",
+    password="your_password",
+    database="ecommerce_cart"
+)
+
+# Create a cursor object to interact with the database
+cursor = connection.cursor()
+
+# Create a table for products
+cursor.execute("""
+    CREATE TABLE products (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        price DECIMAL(10, 2) NOT NULL
+    )
+""")
+
+# Create a table for discounts
+cursor.execute("""
+    CREATE TABLE discounts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        product_id INT NOT NULL,
+        quantity INT NOT NULL,
+        discount_price DECIMAL(10, 2) NOT NULL,
+        FOREIGN KEY (product_id) REFERENCES products(id)
+    )
+""")
+
+# Create a table for the cart
+cursor.execute("""
+    CREATE TABLE cart (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        product_id INT NOT NULL,
+        FOREIGN KEY (product_id) REFERENCES products(id)
+    )
+""")
+
+
+connection.commit()
+connection.close()
+
+print("Database tables created successfully.")
