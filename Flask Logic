@@ -1,0 +1,66 @@
+# main.py (Flask App)
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+
+products = {
+    'A': {'name': 'Product A', 'price': 30},
+    'B': {'name': 'Product B', 'price': 20},
+    'C': {'name': 'Product C', 'price': 50},
+    'D': {'name': 'Product D', 'price': 15},
+}
+
+
+discounts = {
+    'A': {'quantity': 3, 'price': 75},
+    'B': {'quantity': 2, 'price': 35},
+    'basket_total': {'threshold': 150, 'discount': 20},
+}
+
+
+cart = []
+
+@app.route('/products', methods=['GET'])
+def list_products():
+    return jsonify(products)
+
+@app.route('/cart', methods=['GET'])
+def view_cart():
+    total_price = sum(products[item]['price'] for item in cart)
+    total_discounts = calculate_discounts(cart)
+    
+    cart_items = [{'item': products[item]['name'], 'price': products[item]['price'], 'discount': discounts[item]['price']} for item in cart]
+    
+    response = {
+        'items': cart_items,
+        'total_price': total_price,
+        'total_discounts': total_discounts,
+    }
+    
+    return jsonify(response)
+
+@app.route('/cart/add', methods=['POST'])
+def add_to_cart():
+    item = request.json.get('item')
+    if item in products:
+        cart.append(item)
+        return jsonify({'message': f'{products[item]["name"]} added to cart'})
+    else:
+        return jsonify({'error': 'Product not found'})
+
+def calculate_discounts(cart):
+    discount_total = 0
+    item_counts = {item: cart.count(item) for item in cart}
+    
+    for item, count in item_counts.items():
+        if item in discounts and count >= discounts[item]['quantity']:
+            discount_total += (count // discounts[item]['quantity']) * discounts[item]['price']
+    
+    if sum(products[item]['price'] for item in cart) >= discounts['basket_total']['threshold']:
+        discount_total += discounts['basket_total']['discount']
+    
+    return discount_total
+
+if __name__ == '__main__':
+    app.run(debug=True)
