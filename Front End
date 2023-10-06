@@ -1,0 +1,105 @@
+ // src/components/ProductList.js
+import React, { useState, useEffect } from 'react';
+
+function ProductList({ products, addToCart }) {
+  return (
+    <div>
+      <h2>Products</h2>
+      <ul>
+        {Object.keys(products).map((product) => (
+          <li key={product}>
+            {products[product].name} - Rs {products[product].price}
+            <button onClick={() => addToCart(product)}>Add to Cart</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default ProductList;
+
+// src/components/Cart.js
+import React from 'react';
+
+function Cart({ cartItems, totalPrice, totalDiscounts }) {
+  return (
+    <div>
+      <h2>Cart</h2>
+      <ul>
+        {cartItems.map((item) => (
+          <li key={item.item}>
+            {item.item} - Rs {item.price} (Discount: Rs {item.discount})
+          </li>
+        ))}
+      </ul>
+      <p>Total Price: Rs {totalPrice}</p>
+      <p>Total Discounts: Rs {totalDiscounts}</p>
+    </div>
+  );
+}
+
+export default Cart;
+
+// src/App.js
+import React, { useState, useEffect } from 'react';
+import ProductList from './components/ProductList';
+import Cart from './components/Cart';
+
+function App() {
+  const [products, setProducts] = useState({});
+  const [cartItems, setCartItems] = useState([]);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [totalDiscounts, setTotalDiscounts] = useState(0);
+
+  // Fetch product data from the server
+  useEffect(() => {
+    // Replace with your API endpoint to fetch product data
+    fetch('/api/products')
+      .then((response) => response.json())
+      .then((data) => setProducts(data));
+  }, []);
+
+  // Function to add items to the cart
+  const addToCart = (item) => {
+    // Replace with your API endpoint to add items to the cart
+    fetch(`/api/cart/add`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ item }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        // Update cart items
+        setCartItems([...cartItems, data.message]);
+      });
+  };
+
+  // Function to fetch and update cart data
+  const fetchCartData = () => {
+    // Replace with your API endpoint to fetch cart data
+    fetch('/api/cart')
+      .then((response) => response.json())
+      .then((data) => {
+        setCartItems(data.items);
+        setTotalPrice(data.total_price);
+        setTotalDiscounts(data.total_discounts);
+      });
+  };
+
+  useEffect(() => {
+    // Fetch cart data when the component mounts
+    fetchCartData();
+  }, []);
+
+  return (
+    <div>
+      <ProductList products={products} addToCart={addToCart} />
+      <Cart cartItems={cartItems} totalPrice={totalPrice} totalDiscounts={totalDiscounts} />
+    </div>
+  );
+}
+
+export default App;
